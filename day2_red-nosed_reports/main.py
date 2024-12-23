@@ -1,5 +1,5 @@
 
-def get_safe_reports(reports:list[list[int]], dampener=True) -> int:
+def get_safe_reports(reports:list[list[int]], dampener=False) -> int:
     """
     Return the number of safe reports.
 
@@ -9,7 +9,7 @@ def get_safe_reports(reports:list[list[int]], dampener=True) -> int:
     """
     return sum(is_report_safe(report, dampener) for report in reports)
 
-def is_report_safe(report:list[int], dampener=True) -> bool:
+def is_report_safe(report:list[int], dampener=False) -> bool:
     """
     Returns True if report is safe.
 
@@ -18,33 +18,33 @@ def is_report_safe(report:list[int], dampener=True) -> bool:
           or they are all decreasing.
         - Any two adjacent levels differ by at least one and at most three.
     """
-    ordered = is_increasing(report, dampener) or is_decreasing(report, dampener)
-    if ordered:
-        if ordered[0] == -1:
-            return between_1_and_3(report)
-        else:
-            new_report = report.copy()
-            new_report.pop(ordered[0])
-            return between_1_and_3(new_report)
+    check = safety_check(report)
+
+    if (not dampener) or check:
+        return check
     else:
+        for i in range(len(report)):
+            new_report = report.copy()
+            new_report.pop(i)
+            dampener_check = safety_check(new_report)
+            if dampener_check:
+                return True
         return False
 
-# def safety_check(report:list[int]) -> tuple[bool, int, int]:
-#     """
-#     Safety check.
+def safety_check(report:list[int]) -> bool:
+    """
+    Safety check.
 
-#     A report is safe if it satisfies the folloeing conditions:
-#         - The levels(list members) are all increasing
-#           or they are all decreasing.
-#         - Any two adjacent levels differ by at least one and at most three.
-#     """
-#     return (
-#         (is_increasing(report)[0] or is_decreasing(report)[0])
-#             and
-#         (between_1_and_3(report)),
-#         is_increasing[1],
-#         is_decreasing[1]
-#     )
+    A report is safe if it satisfies the folloeing conditions:
+        - The levels(list members) are all increasing
+          or they are all decreasing.
+        - Any two adjacent levels differ by at least one and at most three.
+    """
+    return (
+        (is_increasing(report) or is_decreasing(report))
+            and
+        (between_1_and_3(report))
+    )
 
 def is_increasing(report:list[int], dampener=True, idx_=-1):
     """
@@ -56,15 +56,10 @@ def is_increasing(report:list[int], dampener=True, idx_=-1):
     """
     for idx in range(len(report)-1):
         if report[idx] >= report[idx+1]:
-            if dampener:
-                new_report = report.copy()
-                new_report.pop(idx+1)
-                return is_increasing(new_report, dampener=False, idx_=idx+1)
-            else:
-                return ()
-    return (idx_,)
+            return False
+    return True
 
-def is_decreasing(report:list[int], dampener=True, idx_=-1):
+def is_decreasing(report:list[int]) -> bool:
     """
     Return (True, -1) if the elements of `report` are
     steadily decreasing.
@@ -74,13 +69,8 @@ def is_decreasing(report:list[int], dampener=True, idx_=-1):
     """
     for idx in range(len(report)-1):
         if report[idx] <= report[idx+1]:
-            if dampener:
-                new_report = report.copy()
-                new_report.pop(idx+1)
-                return is_decreasing(new_report, dampener=False, idx_=idx+1)
-            else:
-                return ()
-    return (idx_,)
+            return False
+    return True
 
 def between_1_and_3(report:list[int]) -> bool:
     """
